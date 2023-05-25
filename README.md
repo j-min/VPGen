@@ -10,7 +10,7 @@ The code for **VPGen**, a new framework for text-to-image generation, as describ
 [Mohit Bansal](https://www.cs.unc.edu/~mbansal/)
 
 [[Project Page](https://vp-t2i.github.io)]
-[[Paper](https://vp-t2i.github.io)]
+[[Paper](https://arxiv.org/abs/2305.15328)]
 [[Code for VPEval](https://github.com/aszala/VPEval)]
 
 
