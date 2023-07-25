@@ -12,7 +12,7 @@ The code for **VPGen**, a new framework for text-to-image generation, as describ
 [[Project Page](https://vp-t2i.github.io)]
 [[Paper](https://arxiv.org/abs/2305.15328)]
 [[Code for VPEval](https://github.com/aszala/VPEval)]
-
+[[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Colab Demo](https://colab.research.google.com/github/j-min/VPGen/blob/main/VPGen_Demo.ipynb)]
 
 <img width="800" src="assets/teaser_video.gif"/>
 
@@ -55,11 +55,43 @@ pip install -r requirements.txt
 
 ## Setup Vicuna 13B
 
-### 1) Download LLama 13B checkpoint 
+### Download pre-processed Vicuna 13B + LoRA Checkpoints from [HF Hub](https://huggingface.co/j-min/VPGen)
+
+Currently we provide Vicuna13B + LoRA checkpoint finetuned on Flickr30K + COCO + PaintSkills. More checkpoints will be updated in the future.
+
+```python
+print("Installing HF hub")
+# !pip install -q --upgrade huggingface_hub
+
+print("Downloading Vicuna13B weights")
+
+from huggingface_hub import snapshot_download
+snapshot_download(repo_id="j-min/vicuna-13b-v0-merged",
+                  repo_type="model",
+                  local_dir="vicuna_13b_checkpoint",
+                  force_download=True,
+)
+
+print("Downloading LoRA weights")
+
+from huggingface_hub import hf_hub_download
+
+for filename in ['adapter_config.json', 'adapter_model.bin']:
+  hf_hub_download(repo_id="j-min/VPGen",
+                  filename=filename,
+                  subfolder="vicuna13B_GPU4_flickr30k_coco_paintskills_epoch2_mbatch32_lora16_cutoff256",
+                  local_dir="CK/",
+  )
+```
+
+
+### (Optional; Guideline to obtain Merged Vicuna 13B weights)
+
+#### 1) Download LLama 13B checkpoint 
 
 Weights for the LLaMA models can be obtained from by filling out [this form](http://docs.google.com/forms/d/e/1FAIpQLSfqNECQnMkycAp2jP4Z9TFX0cGR4uf7b_fBxjY_OjhJILlKGA/viewform?usp=send_form).
 
-### 2) Convert the weights into Huggingface Transformers compatible version, following https://huggingface.co/docs/transformers/main/model_doc/llama.
+#### 2) Convert the weights into Huggingface Transformers compatible version, following https://huggingface.co/docs/transformers/main/model_doc/llama.
 
 ```bash
 git clone https://github.com/huggingface/transformers
@@ -72,7 +104,7 @@ python src/transformers/models/llama/convert_llama_weights_to_hf.py \
 	--output_dir /output/path
 ```
 
-### 3) Download Vicuan 13B v0 delta weigths and merge with LLama weights to obtain Vicuna weights.
+#### 3) Download Vicuan 13B v0 delta weigths and merge with LLama weights to obtain Vicuna weights.
 
 This conversion command needs around 60 GB of CPU RAM. See the "Low CPU Memory Conversion" section below if you do not have enough memory. Replace /path/to/* with the real paths.
 
@@ -84,8 +116,8 @@ pip install fschat==0.1.10
 
 python -m fastchat.model.apply_delta \
     --base-model-path /path/to/llama-13b \
-    --target-model-path /path/to/output/vicuna-13b \
-    --delta-path lmsys/vicuna-7b-delta-v0
+    --target-model-path vicuna_13b_checkpoint \
+    --delta-path lmsys/vicuna-13b-delta-v0
 ```
 
 
@@ -108,7 +140,7 @@ pip install -e .
 ```bash
 n_gpus=4
 model='vicuna13B'
-base_model_path='/path/to/output/vicuna-13b'
+base_model_path='vicuna_13b_checkpoint'
 
 micro_batch_size=24
 batch_size=96
@@ -116,6 +148,7 @@ lora_r=16
 epochs=2
 cutoff_len=512
 
+# https://huggingface.co/j-min/VPGen/blob/main/flickr30k_coco_paintskills_text2box_train.json
 data='flickr30k_coco_paintskills'
 
 run_name=$model"_GPU$n_gpus"_epoch"$epochs"_mbatch"$micro_batch_size"_lora"$lora_r"_cutoff"$cutoff_len"
@@ -140,15 +173,15 @@ torchrun --nproc_per_node=4 \
 # Layout Inference with Vicuna
 
 It takes 10-15 minutes to load Vicuna weights.
-Vicuna 13B inference takes around 30GB of GPU RAM.
+In our experiments, Vicuna 13B inference takes around 35GB CPU + 30GB GPU memory.
 
 ```bash
 gpu_id=0
 
-base_model_path='/path/to/output/vicuna-13b'
+base_model_path='vicuna_13b_checkpoint'
 
 # LoRA checkpoint path
-lora_model_path='CHECKPOINT_PATH'
+lora_model_path='lora_checkpoint/vicuna13B_GPU4_flickr30k_coco_paintskills_epoch2_mbatch32_lora16_cutoff256'
 
 # where to load prompts
 prompts_path='DATA_PATH'
