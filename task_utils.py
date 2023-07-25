@@ -1,8 +1,14 @@
 
-import numpy as np
 import re
-from functools import lru_cache
-import re
+import string
+
+TEMPLATE_OBJCOUNTS = string.Template("""Instruction: Given an image caption, determine the objects and its counts to draw an image.                                               
+Caption: $PROMPT""")
+
+TEMPLATE_OBJCOORDS = string.Template("""Instruction: Given an image caption and objects, determine the coordinates of the objects.
+Caption: $PROMPT
+Objects: $OBJECTS""")
+
 
 def normalize_quantize_coordinates(box, width, height, n_bins=100, normalize=True, quantize=True, target_format='xyxy'):
     """
@@ -77,7 +83,6 @@ def prepare_task(caption, objects, task='predict_box_captions', mask_all_objects
     """
 
     tasks = ['predict_box_captions', 'predict_box_coordinates']
-    # 'predict_box_captions_and_coordinates']
     assert task in tasks, f"task must be one of {tasks}, but got {task}"
 
     if dataset == 'flickr30k':
@@ -169,8 +174,6 @@ def prepare_task_predict_box_captions_flickr(
         'target_objects': objects,
     }
 
-
-import re
 def decode_objects_from_text(input_string):
     # Regular expression to match words and counts
     pattern = r"((?:[\w'-]+\s+)*[\w'-]+)\s+\((\d+)\)"
@@ -268,7 +271,6 @@ def prepare_task_predict_box_coordinates_flickr(caption,
         'target_objects': objects,
     }
 
-import re
 def decode_coordinates_from_text(input_string):
     # Regular expression to match multiple words and coordinate tuples
     pattern = r"((?:[\w'-]+\s+)*[\w'-]+)\s+\[([^\]]+)\]"

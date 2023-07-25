@@ -1,18 +1,11 @@
 # coding: utf-8
-import os
 import gradio as gr
 import random
 import torch
-import cv2
-import re
-import uuid
-from PIL import Image, ImageDraw, ImageOps, ImageFont
-import math
 import numpy as np
 import argparse
-import inspect
-import tempfile
 import pandas as pd
+import string
 
 from pathlib import Path
 
@@ -29,6 +22,8 @@ def seed_everything(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     return seed
+
+
 
 
 if __name__ == '__main__':
@@ -146,9 +141,7 @@ if __name__ == '__main__':
                            desc=desc):
 
         # Task 0
-        source_text = "Instruction: Given an image caption, determine the objects and its counts to draw an image."
-        source_text += "\n"
-        source_text += "Caption: " + prompt
+        source_text = task_utils.TEMPLATE_OBJCOUNTS.substitute(PROMPT=prompt)
 
         print('Task 0')
         print(source_text)
@@ -164,15 +157,12 @@ if __name__ == '__main__':
         print(gen_text)
 
         # Task 1
-        source_text = "Instruction: Given an image caption and objects, determine the coordinates of the objects."
-        source_text += "\n"
-        source_text += "Caption: " + prompt
-        source_text += "\n"
-        source_text += "Objects: "
         obj_str = []
         for obj in pred_objects:
             obj_str += [f"{obj['text']} ({obj['count']})"]
-        source_text += ' '.join(obj_str)
+        obj_str = " ".join(obj_str)
+
+        source_text = task_utils.TEMPLATE_OBJCOORDS.substitute(PROMPT=prompt, OBJECTS=obj_str)
 
         print('Task 1')
         print(source_text)

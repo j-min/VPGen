@@ -67,6 +67,7 @@ class LlamaHuggingFace:
             input_ids=input_ids,
             generation_config=generation_config,
             max_new_tokens=self.max_new_tokens)
+
         response = self.tokenizer.batch_decode(
             generate_ids,
             skip_special_tokens=True,
