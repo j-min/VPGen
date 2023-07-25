@@ -80,7 +80,7 @@ for filename in ['adapter_config.json', 'adapter_model.bin']:
   hf_hub_download(repo_id="j-min/VPGen",
                   filename=filename,
                   subfolder="vicuna13B_GPU4_flickr30k_coco_paintskills_epoch2_mbatch32_lora16_cutoff256",
-                  local_dir="CK/",
+                  local_dir="lora_checkpoint/",
   )
 ```
 
